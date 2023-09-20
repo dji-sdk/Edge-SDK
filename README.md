@@ -1,7 +1,7 @@
 # DJI Edge SDK (ESDK)
 
 ![](https://img.shields.io/badge/version-V1.0.0-yellow.svg)
-![](https://img.shields.io/badge/platform-linux_|_x86_64-green.svg)
+![](https://img.shields.io/badge/platform-linux-green.svg)
 ![](https://img.shields.io/badge/license-MIT-blue.svg)
 
 ## What is the DJI Edge SDK?
