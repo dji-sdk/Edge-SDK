@@ -1,30 +1,30 @@
 # DJI Edge SDK (ESDK)
 
 ![](https://img.shields.io/badge/version-V1.0.0-yellow.svg)
-![](https://img.shields.io/badge/platform-linux_.svg)
+![](https://img.shields.io/badge/platform-linux_|_x86_64-green.svg)
 ![](https://img.shields.io/badge/license-MIT-blue.svg)
 
 ## What is the DJI Edge SDK?
 
 Edge-SDK is an edge computing development kit for DJI Airport, providing the following functionalities:
 
-* Stream subscription for DJI Airport
-* Media file retrieval from DJI Airport
-* Small data upload channel to the cloud
-* Secure communication functionality
+* Fetch Aircraft Media Files
+* Subscribe to Aircraft Data Streams
+* Secure Local Communication Links
+* Cloud Data Intercommunication Channels
 
 ## Functionalities
-#### Stream Subscription for DJI Airport
-This feature allows you to subscribe to the video stream of DJI Airport and receive real-time video data.
+#### Fetch Aircraft Media Files
+Enables fetching and processing media files captured by aircraft to local system for refined recognition and data filtering. This reduces cloud traffic and latency and enhances data processing efficiency.
 
-#### Media File Retrieval from DJI Airport
-This feature allows you to download and retrieve media files from DJI Airport, including photos and videos.
+#### Subscribe to Aircraft Data Streams
+Allowing real-time video recognition and other AI processes for aircraft-transmitted data streams on local system, which greatly enhances aircraft intelligence, and provides better support for aircraft mission execution.
 
-#### Small Data Upload Channel to the Cloud
-Edge-SDK provides a small data upload channel that allows you to effectively upload small amounts of data to cloud storage or processing.
+#### Secure Local Communication Links
+Edge computing offers a secure local communication link, ensuring communication safety and privacy protection between aircraft. This avoids risks of network attacks and data breaches during aircraft communication.
 
-#### Secure Communication Functionality
-To ensure the security of communication, Edge-SDK provides encryption and authentication mechanisms to ensure secure communication with DJI Airport.
+#### Cloud Data Intercommunication Channels
+Edge computing can process and transmit data in unstable network environments, utilizing small data channels to enhance transmission efficiency. This ensures aircraft achieve efficient data processing and transmission across various environments.
 
 ## Dependencies
 * libssh2 (version 1.10.x or hight)
@@ -44,17 +44,6 @@ to get the latest version information.
 ## License
 
 Edge SDK codebase is MIT-licensed. Please refer to the LICENSE file for detailed information.
-
-## Contributing
-
-Please read the following guidelines before starting work on a pull request.
-
-#### Summary of the guidelines:
-
-* One pull request per issue;
-* Choose the right base branch;
-* Clean up "oops" commits before submitting;
-* Follow the coding style by [Google C++ Style Guide](https://google.github.io/styleguide/cppguide.html)
 
 ## Support
 
