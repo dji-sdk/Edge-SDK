@@ -1,73 +1,59 @@
 # DJI Edge SDK (ESDK)
 
 ![](https://img.shields.io/badge/version-V1.0.0-yellow.svg)
-![](https://img.shields.io/badge/platform-linux_.svg)
+![](https://img.shields.io/badge/platform-linux-green.svg)
 ![](https://img.shields.io/badge/license-MIT-blue.svg)
 
 ## What is the DJI Edge SDK?
 
-Edge-SDK is an edge computing development kit for DJI Airport, providing the following functionalities:
+DJI Edge SDK is an edge computing development kit for DJI Dock, providing the following functions:
 
-* Stream subscription for DJI Airport
-* Media file retrieval from DJI Airport
-* Small data upload channel to the cloud
-* Secure communication functionality
+* Manages aircraft media files
+* Subscribes to aircraft live streams
+* Provides secure local communication links
+* Supports SDK interconnections
 
-## Functionalities
-#### Stream Subscription for DJI Airport
-This feature allows you to subscribe to the video stream of DJI Airport and receive real-time video data.
+## Features
 
-#### Media File Retrieval from DJI Airport
-This feature allows you to download and retrieve media files from DJI Airport, including photos and videos.
+### Subscribe to Aircraft Live Streams
+Allowing real-time video recognition and other AI processes for aircraft-transmitted data streams on local system, which greatly enhances aircraft intelligence, and provides better support for aircraft mission execution.
 
-#### Small Data Upload Channel to the Cloud
-Edge-SDK provides a small data upload channel that allows you to effectively upload small amounts of data to cloud storage or processing.
+### Manage Aircraft Media Files
+Enables fetching and processing media files captured by aircraft to local system for refined recognition and data filtering. This reduces cloud traffic and latency and enhances data processing efficiency.
 
-#### Secure Communication Functionality
-To ensure the security of communication, Edge-SDK provides encryption and authentication mechanisms to ensure secure communication with DJI Airport.
+### Provide Secure Local Communication Links
+Edge computing offers a secure local communication link, ensuring communication safety and privacy protection between aircraft. This avoids risks of network attacks and data breaches during aircraft communication.
+
+### Support SDK Interconnections
+Edge computing can process and transmit data in unstable network environments, utilizing small data channels to enhance transmission efficiency. This ensures aircraft achieve efficient data processing and transmission across various environments.
 
 ## Dependencies
-* libssh2 (version 1.10.x or hight)
+* libssh2 (version 1.10.x or higher)
 * openssl (reference version 1.1.1f)
-* opencv (version 3.4.16 or hight)
-* ffmpeg (version 4.13 or hight)
+* opencv (version 3.4.16 or higher)
+* ffmpeg (version 4.13 or higher)
 
 ## Documentation
 
-For full documentation, please visit
-the [DJI Developer Documentation](https://developer.dji.com/doc/edge-sdk-tutorial/en/). Documentation
-regarding the code can be found in the [ESDK API Reference](https://developer.dji.com/doc/edge-sdk-api-reference/en/)
-section of the developer's website. Please visit
-the [Latest Version Information](https://developer.dji.com/doc/edge-sdk-tutorial/en/)
-to get the latest version information.
+* For full develop tutorial documentation, please visit the [DJI Developer Documentation](https://developer.dji.com/doc/edge-sdk-tutorial/en/). 
+* For API reference documentation, please visit [ESDK API Reference](https://developer.dji.com/doc/edge-sdk-api-reference/en/) section of the developer's website.
+* Please visit the [Release Note](https://developer.dji.com/doc/edge-sdk-tutorial/en/) to get the latest version information.
 
 ## License
 
 Edge SDK codebase is MIT-licensed. Please refer to the LICENSE file for detailed information.
-
-## Contributing
-
-Please read the following guidelines before starting work on a pull request.
-
-#### Summary of the guidelines:
-
-* One pull request per issue;
-* Choose the right base branch;
-* Clean up "oops" commits before submitting;
-* Follow the coding style by [Google C++ Style Guide](https://google.github.io/styleguide/cppguide.html)
 
 ## Support
 
 You can get official support from DJI and the community with the following methods:
 
 - Post questions on Developer Forum
-    * [DJI SDK Developer Forum(Cn)](https://djisdksupport.zendesk.com/hc/zh-cn/community/topics)
-    * [DJI SDK Developer Forum(En)](https://djisdksupport.zendesk.com/hc/en-us/community/topics)
+    * [DJI SDK Developer Forum (CN)](https://djisdksupport.zendesk.com/hc/zh-cn/community/topics)
+    * [DJI SDK Developer Forum (EN)](https://djisdksupport.zendesk.com/hc/en-us/community/topics)
 - Submit a request describing your problem on Developer Support
-    * [DJI SDK Developer Support(Cn)](https://djisdksupport.zendesk.com/hc/zh-cn/requests/new)
-    * [DJI SDK Developer Support(En)](https://djisdksupport.zendesk.com/hc/en-us/requests/new)
+    * [DJI SDK Developer Support (CN)](https://djisdksupport.zendesk.com/hc/zh-cn/requests/new)
+    * [DJI SDK Developer Support (EN)](https://djisdksupport.zendesk.com/hc/en-us/requests/new)
 
 You can also communicate with other developers by the following methods:
 
-- Post questions on [**Stackoverflow**](http://stackoverflow.com) using [**
-  dji-sdk**](http://stackoverflow.com/questions/tagged/dji-sdk) tag
+- Post questions on [**Stackoverflow**](http://stackoverflow.com) using [**dji-sdk**](http://stackoverflow.com/questions/tagged/dji-sdk) tag
