@@ -22,6 +22,7 @@
 #include <unistd.h>
 
 #include <condition_variable>
+#include <cstring>
 #include <iostream>
 #include <mutex>
 #include <thread>
@@ -37,6 +38,7 @@
 #include "opencv2/dnn.hpp"
 #include "opencv2/highgui/highgui.hpp"
 #include "opencv2/opencv.hpp"
+#include "util_misc.h"
 
 using namespace cv;
 using namespace edge_sdk;
@@ -99,27 +101,6 @@ static ErrorCode ReadMediaFile(const char* file_path) {
     } while (1);
 
     INFO("image_vec: %d", image.size());
-
-    return kOk;
-}
-
-static ErrorCode GetCurrentFileDirPath(const char* filePath,
-                                       uint32_t pathBufferSize, char* dirPath) {
-    uint32_t i = strlen(filePath) - 1;
-    uint32_t dirPathLen;
-
-    while (filePath[i] != '/') {
-        i--;
-    }
-
-    dirPathLen = i + 1;
-
-    if (dirPathLen + 1 > pathBufferSize) {
-        return kErrorParamOutOfRange;
-    }
-
-    memcpy(dirPath, filePath, dirPathLen);
-    dirPath[dirPathLen] = 0;
 
     return kOk;
 }
@@ -225,12 +206,11 @@ class JpegRecordProcessor : public ImageProcessor {
             strftime(buf, sizeof(buf), "_%Y-%m-%d-%H-%M-%S", localtime(&now));
             std::string file = file_path_ + std::string("/") + name_ +
                                std::string(buf) + ".jpg";
-            cv::imwrite(file.c_str(), *image);
             INFO("write image: %s", file.c_str());
+            cv::imwrite(file.c_str(), *image);
         }
     }
 
-   protected:
    private:
     uint32_t frame_counter_ = 0;
     std::string name_;
@@ -245,7 +225,7 @@ int main(int argc, char** argv) {
     }
 
     if (GetCurrentFileDirPath(__FILE__, sizeof(current_path_), current_path_) !=
-        kOk) {
+        0) {
         WARN("get path failed");
         snprintf(current_path_, sizeof(current_path_), "/tmp/");
     }
@@ -253,9 +233,12 @@ int main(int argc, char** argv) {
     StartDumpMediaFiles();
 
     auto image_processor = std::make_shared<JpegRecordProcessor>("Payload");
+    StreamDecoder::Options decoder_option = {.name = std::string("ffmpeg")};
+    auto payload_decoder = CreateStreamDecoder(decoder_option);
+
     auto liveview = edge_app::LiveviewSample::CreateLiveview(
         "Payload", Liveview::kCameraTypePayload, Liveview::kStreamQuality720p,
-        image_processor);
+        payload_decoder, image_processor);
 
     rc = liveview->Start();
     if (rc != kOk) {
@@ -264,9 +247,10 @@ int main(int argc, char** argv) {
 
     INFO("start FPV cammera");
     auto fpv_image_processor = std::make_shared<JpegRecordProcessor>("FPV");
+    auto fpv_decoder = CreateStreamDecoder(decoder_option);
     auto fpv_liveview = edge_app::LiveviewSample::CreateLiveview(
         "FPV", Liveview::kCameraTypeFpv, Liveview::kStreamQuality720p,
-        fpv_image_processor);
+        fpv_decoder, fpv_image_processor);
 
     rc = fpv_liveview->Start();
     if (rc != kOk) {

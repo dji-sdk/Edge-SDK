@@ -26,7 +26,6 @@
 #include <mutex>
 
 #include "error_code.h"
-#include "opencv2/opencv.hpp"
 #include "stream_decoder.h"
 
 extern "C" {
@@ -42,12 +41,12 @@ class FFmpegStreamDecoder : public StreamDecoder {
     explicit FFmpegStreamDecoder(const std::string &name);
     virtual ~FFmpegStreamDecoder();
 
-    virtual int32_t Init() override;
+    int32_t Init() override;
 
-    virtual int32_t DeInit() override;
+    int32_t DeInit() override;
 
-    virtual int32_t Decode(const uint8_t *data, size_t length,
-                             std::shared_ptr<Image> &result) override;
+    int32_t Decode(const uint8_t *data, size_t length,
+                   DecodeResultCallback result_callback) override;
 
    private:
     std::mutex decode_mutex;
@@ -68,4 +67,4 @@ class FFmpegStreamDecoder : public StreamDecoder {
 
 }  // namespace edge_app
 
-#endif
+#endif  // __FFMPEG_STREAM_DECODER_H__

@@ -65,7 +65,10 @@ class MediaManager final {
 
     /**
      * @brief
-     * Set media files for cloud upload. Note: Media files from flight waylines are uploaded to the cloud by  default. If set to not upload, and edge computing goes offline for over 30s, the default method will be restored, restarting to upload media files to the cloud.
+     * Set media files for cloud upload. Note: Media files from flight waylines
+     * are uploaded to the cloud by  default. If set to not upload, and edge
+     * computing goes offline for over 30s, the default method will be restored,
+     * restarting to upload media files to the cloud.
      * @param enable: Enable/disable cloud upload
      * @return Execution result
      */
@@ -73,7 +76,9 @@ class MediaManager final {
 
     /**
      * @brief
-     * Set whether to delete local media files at the dock after uploading is complete. Note: When edge computing requires media file retrieval, it should be set not to delete.
+     * Set whether to delete local media files at the dock after uploading is
+     * complete. Note: When edge computing requires media file retrieval, it
+     * should be set not to delete.
      * @param enable: Delete after upload completion or not
      * @return Execution result
      */

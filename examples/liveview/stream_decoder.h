@@ -23,6 +23,7 @@
 #define __STREAM_DECODER_H__
 #include <memory>
 #include <string>
+#include <functional>
 
 #include "error_code.h"
 
@@ -49,14 +50,17 @@ class StreamDecoder {
     virtual int32_t DeInit() = 0;
 
     using Image = cv::Mat;
+    using DecodeResultCallback =
+        std::function<void(std::shared_ptr<Image>& result)>;
     virtual int32_t Decode(const uint8_t* data, size_t length,
-                           std::shared_ptr<Image>& result) = 0;
+                           DecodeResultCallback result_callback) = 0;
 
    private:
     std::string decoder_name_;
 };
 
-std::shared_ptr<StreamDecoder> CreateStreamDecoder(const StreamDecoder::Options& option);
+std::shared_ptr<StreamDecoder> CreateStreamDecoder(
+    const StreamDecoder::Options& option);
 
 }  // namespace edge_app
 

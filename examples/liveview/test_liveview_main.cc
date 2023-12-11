@@ -25,6 +25,7 @@
 #include "sample_liveview.h"
 
 using namespace edge_sdk;
+using namespace edge_app;
 
 ErrorCode ESDKInit();
 
@@ -34,22 +35,34 @@ int main(int argc, char **argv) {
         ERROR("pre init failed");
         return -1;
     }
-    while (argc < 3) {
+
+    int type = 0;
+    while (argc < 3 || (type = atoi(argv[1])) > 2) {
         ERROR(
             "Usage: %s [CAMERA_TYPE] [QUALITY] [SOURCE] \nDESCRIPTION:\n "
             "CAMERA_TYPE: "
-            "1-FPV. 2-Payload \n QUALITY: 1-540p. 2-720p. 3-720pHigh. 4-1080p "
+            "0-FPV. 1-Payload \n QUALITY: 1-540p. 2-720p. 3-720pHigh. "
+            "4-1080p "
             "\n SOURCE: 1-wide 2-zoom 3-IR \n eg: \n %s 1 3 1",
             argv[0], argv[0]);
-        sleep(3);
+        sleep(1);
     }
 
-    auto type = atoi(argv[1]);
     auto quality = atoi(argv[2]);
 
-    auto liveview = edge_app::LiveviewSample::CreateLiveview(
-        std::to_string(type), (edge_sdk::Liveview::CameraType)type,
-        (edge_sdk::Liveview::StreamQuality)quality, nullptr);
+    const char type_to_str[2][16] = {"FPVCamera", "PayloadCamera"};
+
+    StreamDecoder::Options decoder_option = {.name = std::string("ffmpeg")};
+    auto stream_decoder = CreateStreamDecoder(decoder_option);
+
+    auto tag = std::string(type_to_str[type]);
+    ImageProcessor::Options image_processor_option = {.name = std::string("display"),
+                                       .alias = tag};
+    auto image_processor = CreateImageProcessor(image_processor_option);
+
+    auto liveview = LiveviewSample::CreateLiveview(
+        tag, (Liveview::CameraType)type, (Liveview::StreamQuality)quality,
+        stream_decoder, image_processor);
 
     if (argc == 4) {
         auto src = atoi(argv[3]);

@@ -21,31 +21,17 @@
  */
 #include "sample_liveview.h"
 
+#include <unistd.h>
+
 #include "liveview/liveview.h"
 
 using namespace edge_sdk;
 
 namespace edge_app {
 
-class ImagePlayer : public ImageProcessor {
-   public:
-    ImagePlayer(const std::string& name) : name_(name) {
-        cv::namedWindow(name.c_str(), cv::WINDOW_NORMAL);
-    }
-
-    ~ImagePlayer() override {}
-
-    void Process(const std::shared_ptr<Image> image) override {
-        imshow(name_.c_str(), *image);
-        cv::waitKey(1);
-    }
-
-   private:
-    std::string name_;
-};
-
 LiveviewSample::LiveviewSample(const std::string& name) {
     liveview_ = edge_sdk::CreateLiveview();
+    liveview_status_ = 0;
 }
 
 ErrorCode LiveviewSample::StreamCallback(const uint8_t* data, size_t len) {
@@ -55,12 +41,15 @@ ErrorCode LiveviewSample::StreamCallback(const uint8_t* data, size_t len) {
     return kOk;
 }
 
-ErrorCode LiveviewSample::Init(Liveview::CameraType type,
-                               Liveview::StreamQuality quality) {
-    auto callback_main =
+ErrorCode LiveviewSample::Init(
+    Liveview::CameraType type, Liveview::StreamQuality quality,
+    std::shared_ptr<StreamProcessorThread> processor) {
+    stream_processor_thread_ = processor;
+
+    auto stream_callback =
         std::bind(&LiveviewSample::StreamCallback, this, std::placeholders::_1,
                   std::placeholders::_2);
-    Liveview::Options option = {type, quality, callback_main};
+    Liveview::Options option = {type, quality, stream_callback};
 
     auto rc = liveview_->Init(option);
 
@@ -71,66 +60,48 @@ ErrorCode LiveviewSample::Init(Liveview::CameraType type,
 }
 
 ErrorCode LiveviewSample::Start() {
-    stream_processor_thread_->Start();
-    auto rc = liveview_->StartH264Stream();
-    return rc;
+    if (stream_processor_thread_->Start() != 0) {
+        ERROR("stream processor start failed");
+        return kErrorInvalidOperation;
+    }
+    std::thread([&] {
+        // Waiting for the liveview to be available before starting,
+        // otherwise the StartH264Stream() will fail.
+        while (liveview_status_ == 0) sleep(1);
+        auto rc = liveview_->StartH264Stream();
+        if (rc != kOk) {
+            ERROR("Failed to start liveview: %d", rc);
+        }
+    }).detach();
+    return kOk;
 }
 
 void LiveviewSample::LiveviewStatusCallback(
     const Liveview::LiveviewStatus& status) {
-    auto now = time(NULL);
-    if (now >
-        kLiveviewStatusTimeOutThreshold + received_liveview_status_time_) {
-        try_restart_liveview_ = true;
-    }
-
-    if (status != liveview_status_) {
-        if (liveview_status_ == 0) {
-            try_restart_liveview_ = true;
-        }
-        liveview_status_ = status;
-    }
-
-    if (status != 0 && try_restart_liveview_) {
-        INFO("Restart h264 stream...");
-        auto rc = liveview_->StartH264Stream();
-        if (rc == kOk) {
-            try_restart_liveview_ = false;
-        } else {
-            ERROR("restart failed: %d", rc);
-            try_restart_liveview_ = true;
-        }
-    }
-    received_liveview_status_time_ = now;
+    liveview_status_ = status;
+    DEBUG("status: %d", status);
 }
 
 std::shared_ptr<LiveviewSample> LiveviewSample::CreateLiveview(
     const std::string& name, edge_sdk::Liveview::CameraType type,
     edge_sdk::Liveview::StreamQuality quality,
+    std::shared_ptr<StreamDecoder> stream_decoder,
     std::shared_ptr<ImageProcessor> image_processor) {
     auto image_processor_thread = std::make_shared<ImageProcessorThread>(name);
-    if (!image_processor) image_processor = std::make_shared<ImagePlayer>(name);
     image_processor_thread->SetImageProcessor(image_processor);
 
     auto stream_processor_thread =
         std::make_shared<StreamProcessorThread>(name);
-
-    StreamDecoder::Options option = {.name = "ffmpeg"};
-    auto decoder = CreateStreamDecoder(option);
-    decoder->Init();
-
-    stream_processor_thread->SetStreamDecoder(decoder);
+    stream_processor_thread->SetStreamDecoder(stream_decoder);
     stream_processor_thread->SetImageProcessorThread(image_processor_thread);
 
     auto liveview = std::make_shared<LiveviewSample>(name);
-    liveview->SetProcessor(stream_processor_thread);
-    liveview->Init(type, quality);
-    return liveview;
-}
+    auto rc = liveview->Init(type, quality, stream_processor_thread);
+    if (rc != kOk) {
+        ERROR("liveview sample init failed");
+    }
 
-void LiveviewSample::SetProcessor(
-    std::shared_ptr<StreamProcessorThread> processor) {
-    stream_processor_thread_ = processor;
+    return liveview;
 }
 
 ErrorCode LiveviewSample::SetCameraSource(

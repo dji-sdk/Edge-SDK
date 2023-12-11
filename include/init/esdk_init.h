@@ -22,6 +22,7 @@
 
 #ifndef __ESDK_INIT_H__
 #define __ESDK_INIT_H__
+
 #include <memory>
 
 #include "error_code.h"

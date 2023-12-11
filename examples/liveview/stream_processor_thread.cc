@@ -21,6 +21,9 @@
  */
 #include "stream_processor_thread.h"
 
+#include <cerrno>
+#include <cstring>
+
 #include "image_processor_thread.h"
 #include "logger.h"
 #include "stream_decoder.h"
@@ -66,20 +69,30 @@ int32_t StreamProcessorThread::Start() {
         return -1;
     }
     processor_start_ = true;
+    if (stream_decoder_) {
+        auto ret = stream_decoder_->Init();
+        if (ret < 0) {
+            ERROR("Failed to init stream decoder");
+            processor_start_ = false;
+            return -1;
+        }
+    }
+
     stream_processor_thread_ =
         std::thread(&StreamProcessorThread::ImageProcess, this);
     {
         sched_param sch;
         int policy;
-        pthread_getschedparam(stream_processor_thread_.native_handle(), &policy, &sch);
+        pthread_getschedparam(stream_processor_thread_.native_handle(), &policy,
+                              &sch);
         sch.sched_priority = 40;
-        if (pthread_setschedparam(stream_processor_thread_.native_handle(), SCHED_FIFO,
-                                  &sch)) {
-            ERROR("Failed to setschedparam: %s", std::strerror(errno));
+        if (pthread_setschedparam(stream_processor_thread_.native_handle(),
+                                  SCHED_FIFO, &sch)) {
+            ERROR("Failed to setschedparam: %s", strerror(errno));
         }
     }
 
-    image_processor_thread_->Start();
+    if (image_processor_thread_) image_processor_thread_->Start();
     return 0;
 }
 
@@ -94,6 +107,7 @@ int32_t StreamProcessorThread::Stop() {
 
 void StreamProcessorThread::ImageProcess() {
     INFO("start image processor: %s", processor_name_.c_str());
+    pthread_setname_np(pthread_self(), "streamdecoder");
     std::vector<uint8_t> decode_data;
     while (processor_start_) {
         std::unique_lock<std::mutex> l(decode_vector_mutex_);
@@ -102,12 +116,13 @@ void StreamProcessorThread::ImageProcess() {
         decode_data = decode_vector_;
         decode_vector_.clear();
         l.unlock();
-        std::shared_ptr<StreamDecoder::Image> result;
-        stream_decoder_->Decode(decode_data.data(), decode_data.size(),
-                                result);
-        if (result != nullptr && image_processor_thread_) {
-            image_processor_thread_->InputImage(result);
-        }
+        stream_decoder_->Decode(
+            decode_data.data(), decode_data.size(),
+            [&](std::shared_ptr<Image>& result) -> void {
+                if (result != nullptr && image_processor_thread_) {
+                    image_processor_thread_->InputImage(result);
+                }
+            });
     }
     INFO("stop image processor: %s", processor_name_.c_str());
 }

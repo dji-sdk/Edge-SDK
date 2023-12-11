@@ -23,15 +23,41 @@
 #include "stream_decoder.h"
 
 #include "ffmpeg_stream_decoder.h"
+#include "logger.h"
 
 namespace edge_app {
 
-std::shared_ptr<StreamDecoder> CreateStreamDecoder(const StreamDecoder::Options& option) {
+class UndefinedStreamDecoder : public StreamDecoder {
+   public:
+    UndefinedStreamDecoder(const std::string& name)
+        : StreamDecoder(name), name_(name) {}
+
+    int32_t Init() override {
+        ERROR("undefine stream decoder: %s", name_.c_str());
+        return -1;
+    }
+
+    int32_t DeInit() override {
+        ERROR("undefine stream decoder: %s", name_.c_str());
+        return -1;
+    }
+    int32_t Decode(const uint8_t* data, size_t length,
+                   DecodeResultCallback result_callback) override {
+        ERROR("undefine stream decoder: %s", name_.c_str());
+        return -1;
+    }
+
+   private:
+    std::string name_;
+};
+
+std::shared_ptr<StreamDecoder> CreateStreamDecoder(
+    const StreamDecoder::Options& option) {
     if (option.name == std::string("ffmpeg")) {
         return std::make_shared<FFmpegStreamDecoder>(option.name);
     }
 
-    return nullptr;
+    return std::make_shared<UndefinedStreamDecoder>(option.name);
 }
 
 }  // namespace edge_app

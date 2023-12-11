@@ -31,7 +31,8 @@
 namespace edge_sdk {
 
 /*
- * Liveview provides subscribing aircraft stream interface, and the ability of switching camera source
+ * Liveview provides subscribing aircraft stream interface, and the ability of
+ * switching camera source
  */
 class Liveview {
    public:
@@ -73,7 +74,8 @@ class Liveview {
         /*! Stream Quality 720p: 30fps, 1280*720, bps 1024*1024 */
         kStreamQuality720p = 2,
 
-        /*! Stream Quality 720pHigh: 30fps, 1280*720, bps 1024*1024 + 512*1024 */
+        /*! Stream Quality 720pHigh: 30fps, 1280*720, bps 1024*1024 + 512*1024
+         */
         kStreamQuality720pHigh = 3,
 
         /*! Stream Quality 1080p: 30fps, 1920*1080, bps 3*1024*1024 */
@@ -95,14 +97,20 @@ class Liveview {
         /*! Type of camera for subscribing stream */
         CameraType camera;
 
-        /*! Quality of subscribed stream. Note: The actual quality of the subscribed stream may vary; the dock will return the closest matching stream quality based on current conditions. */
+        /*! Quality of subscribed stream. Note: The actual quality of the
+         * subscribed stream may vary; the dock will return the closest matching
+         * stream quality based on current conditions. */
         StreamQuality quality;
 
         /*! Processing function for received stream */
         H264Callback callback;
     };
 
-    /*! Live stream status. Each bit represents the validity of different stream qualities: bit0 represents the validity of the adaptive stream; bit1 represents the 540p stream's validity; bit2 represents the 720p stream's validity; bit3 represents the 720pHigh stream's validity; bit4 represents the 1080p stream's validity. */
+    /*! Live stream status. Each bit represents the validity of different stream
+     * qualities: bit0 represents the validity of the adaptive stream; bit1
+     * represents the 540p stream's validity; bit2 represents the 720p stream's
+     * validity; bit3 represents the 720pHigh stream's validity; bit4 represents
+     * the 1080p stream's validity. */
     using LiveviewStatus = uint32_t;
     /**
      * @brief Prototype for stream status processing
@@ -121,7 +129,8 @@ class Liveview {
     Liveview& operator=(const Liveview&) = delete;
 
     /**
-     * @brief Initialize live stream subscription. Note: For a specific camera, you can initialize only once
+     * @brief Initialize live stream subscription. Note: For a specific camera,
+     * you can initialize only once
      * @param option: Stream initialization configuration
      * @return Execution result
      */
@@ -133,7 +142,7 @@ class Liveview {
      */
     virtual ErrorCode DeInit() = 0;
 
-    /** 
+    /**
      * @brief Set camera stream source
      * @return Execution result
      */

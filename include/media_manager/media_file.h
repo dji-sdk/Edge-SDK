@@ -23,7 +23,9 @@
 #ifndef __MEDIA_FILES_H__
 #define __MEDIA_FILES_H__
 
+#include <cstdint>
 #include <string>
+#include <time.h>
 
 namespace edge_sdk {
 

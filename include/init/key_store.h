@@ -22,6 +22,7 @@
 
 #ifndef __KEY_STROE_H__
 #define __KEY_STROE_H__
+
 #include <string>
 
 #include "error_code.h"
