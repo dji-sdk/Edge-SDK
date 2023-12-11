@@ -66,20 +66,20 @@ struct LoggerConsole {
 void EdgeSDKLoggerOutput(LogLevel level, const char *fmt, ...);
 
 #define DEBUG(fmt, ...)                                                      \
-    EdgeSDKLoggerOutput(kLevelDebug, "[%s:%d) " fmt, __FUNCTION__, __LINE__, \
-                        ##__VA_ARGS__)
+    EdgeSDKLoggerOutput(edge_sdk::kLevelDebug, "[%s:%d) " fmt, __FUNCTION__, \
+                        __LINE__, ##__VA_ARGS__)
 
 #define INFO(fmt, ...)                                                      \
-    EdgeSDKLoggerOutput(kLevelInfo, "[%s:%d) " fmt, __FUNCTION__, __LINE__, \
-                        ##__VA_ARGS__)
+    EdgeSDKLoggerOutput(edge_sdk::kLevelInfo, "[%s:%d) " fmt, __FUNCTION__, \
+                        __LINE__, ##__VA_ARGS__)
 
 #define WARN(fmt, ...)                                                      \
-    EdgeSDKLoggerOutput(kLevelWarn, "[%s:%d) " fmt, __FUNCTION__, __LINE__, \
-                        ##__VA_ARGS__)
+    EdgeSDKLoggerOutput(edge_sdk::kLevelWarn, "[%s:%d) " fmt, __FUNCTION__, \
+                        __LINE__, ##__VA_ARGS__)
 
 #define ERROR(fmt, ...)                                                      \
-    EdgeSDKLoggerOutput(kLevelError, "[%s:%d) " fmt, __FUNCTION__, __LINE__, \
-                        ##__VA_ARGS__)
+    EdgeSDKLoggerOutput(edge_sdk::kLevelError, "[%s:%d) " fmt, __FUNCTION__, \
+                        __LINE__, ##__VA_ARGS__)
 
 }  // namespace edge_sdk
 

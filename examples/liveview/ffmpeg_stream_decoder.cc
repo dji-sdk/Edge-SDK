@@ -24,6 +24,7 @@
 #include <unistd.h>
 
 #include "logger.h"
+#include "opencv2/opencv.hpp"
 
 using namespace edge_sdk;
 
@@ -36,20 +37,34 @@ FFmpegStreamDecoder::~FFmpegStreamDecoder() {}
 
 int32_t FFmpegStreamDecoder::Init() {
     avcodec_register_all();
-    pCodecCtx = avcodec_alloc_context3(nullptr);
-    if (!pCodecCtx) {
-        return -1;
-    }
 
-    pCodecCtx->thread_count = 4;
     pCodec = avcodec_find_decoder(AV_CODEC_ID_H264);
-    if (!pCodec || avcodec_open2(pCodecCtx, pCodec, nullptr) < 0) {
+    if (!pCodec) {
+        ERROR("pCodec: %p", pCodec);
         return -2;
     }
 
-    pCodecParserCtx = av_parser_init(AV_CODEC_ID_H264);
+    pCodecParserCtx = av_parser_init(pCodec->id);
     if (!pCodecParserCtx) {
         return -3;
+    }
+
+    pCodecCtx = avcodec_alloc_context3(pCodec);
+    pCodecCtx->pix_fmt = AV_PIX_FMT_YUV420P;
+    pCodecCtx->width = 1920;
+    pCodecCtx->height = 1080;
+    pCodecCtx->flags2 |= AV_CODEC_FLAG2_SHOW_ALL;
+    if (!pCodecCtx) {
+        return -1;
+    }
+    pCodecCtx->thread_count = 4;
+
+    auto ret = avcodec_open2(pCodecCtx, pCodec, nullptr);
+    if (ret < 0) {
+        char buferr[32];
+        ERROR("avcodec open2 failed: %d, %s", ret,
+              av_make_error_string(buferr, 32, ret));
+        return -6;
     }
 
     pFrameYUV = av_frame_alloc();
@@ -64,7 +79,6 @@ int32_t FFmpegStreamDecoder::Init() {
 
     pSwsCtx = nullptr;
 
-    pCodecCtx->flags2 |= AV_CODEC_FLAG2_SHOW_ALL;
     return 0;
 }
 
@@ -107,7 +121,7 @@ int32_t FFmpegStreamDecoder::DeInit() {
 }
 
 int32_t FFmpegStreamDecoder::Decode(const uint8_t *data, size_t length,
-                                    std::shared_ptr<Image> &result) {
+                                    DecodeResultCallback result_callback) {
     const uint8_t *pData = data;
     int remainingLen = length;
     int processedLen = 0;
@@ -176,7 +190,7 @@ int32_t FFmpegStreamDecoder::Decode(const uint8_t *data, size_t length,
                         cv::Mat cvtmp;
                         cvtColor(tmp, cvtmp, cv::COLOR_RGB2BGR);
                         auto mat = std::make_shared<cv::Mat>(cvtmp);
-                        result = mat;
+                        result_callback(mat);
                     }
                 }
             }

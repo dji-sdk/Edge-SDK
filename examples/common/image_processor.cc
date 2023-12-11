@@ -21,12 +21,37 @@
  */
 #include "image_processor.h"
 
-namespace image_processor {
+#include "image_processor_display.h"
+#include "image_processor_yolovfastest.h"
+#include "logger.h"
 
-ImageProcessor::ImageProcessor(const std::string& name) {
+namespace edge_app {
+
+class UndefinedImageProcessor : public ImageProcessor {
+   public:
+    UndefinedImageProcessor(const std::string& name) : name_(name) {}
+
+    void Process(const std::shared_ptr<Image> image) override {
+        ERROR("undefine image processor: %s", name_.c_str());
+    }
+
+   private:
+    std::string name_;
+};
+
+ImageProcessor::ImageProcessor() {}
+
+ImageProcessor::~ImageProcessor() {}
+
+std::shared_ptr<ImageProcessor> CreateImageProcessor(
+    const ImageProcessor::Options& option) {
+    if (option.name == std::string("display")) {
+        return std::make_shared<ImageDisplayProcessor>(option.alias);
+    }
+    if (option.name == std::string("yolovfastest")) {
+        return std::make_shared<ImageProcessorYolovFastest>(option.alias);
+    }
+    return std::make_shared<UndefinedImageProcessor>(option.alias);
 }
 
-ImageProcessor::~ImageProcessor() {
-}
-
-}  // namespace image_processor
+}  // namespace edge_app

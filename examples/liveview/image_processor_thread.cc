@@ -21,6 +21,9 @@
  */
 #include "image_processor_thread.h"
 
+#include <cerrno>
+#include <cstring>
+
 #include "image_processor.h"
 #include "logger.h"
 
@@ -57,7 +60,7 @@ void ImageProcessorThread::InputImage(const std::shared_ptr<Image> image) {
     image_queue_.push(image);
     if (image_queue_.size() > kImageQueueSizeLimit) {
         image_queue_.pop();
-        //WARN("image queue full...");
+        DEBUG("image queue full...");
     }
     image_queue_cv_.notify_one();
 }
@@ -72,17 +75,26 @@ int32_t ImageProcessorThread::Start() {
         return -1;
     }
     processor_start_ = true;
+    if (image_processor_) {
+        auto ret = image_processor_->Init();
+        if (ret < 0) {
+            ERROR("Failed to init image processor");
+            processor_start_ = false;
+            return -1;
+        }
+    }
     image_processor_thread_ =
         std::thread(&ImageProcessorThread::ImageProcess, this);
 
     {
         sched_param sch;
         int policy;
-        pthread_getschedparam(image_processor_thread_.native_handle(), &policy, &sch);
+        pthread_getschedparam(image_processor_thread_.native_handle(), &policy,
+                              &sch);
         sch.sched_priority = 40;
-        if (pthread_setschedparam(image_processor_thread_.native_handle(), SCHED_FIFO,
-                                  &sch)) {
-            ERROR("Failed to setschedparam: %s", std::strerror(errno));
+        if (pthread_setschedparam(image_processor_thread_.native_handle(),
+                                  SCHED_FIFO, &sch)) {
+            ERROR("Failed to setschedparam: %s", strerror(errno));
         }
     }
 
@@ -100,6 +112,7 @@ int32_t ImageProcessorThread::Stop() {
 
 void ImageProcessorThread::ImageProcess() {
     INFO("start image processor: %s", processor_name_.c_str());
+    pthread_setname_np(pthread_self(), "opencvimshow");
     while (processor_start_) {
         std::unique_lock<std::mutex> l(image_queue_mutex_);
         image_queue_cv_.wait(l, [&] { return image_queue_.size() != 0; });

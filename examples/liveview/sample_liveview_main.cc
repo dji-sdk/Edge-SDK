@@ -19,14 +19,15 @@
  *
  *********************************************************************
  */
-#include "sample_liveview.h"
 #include <unistd.h>
 
-#include "image_processor.h"
 #include "error_code.h"
+#include "image_processor.h"
 #include "logger.h"
+#include "sample_liveview.h"
 
 using namespace edge_sdk;
+using namespace edge_app;
 
 ErrorCode ESDKInit();
 
@@ -37,14 +38,39 @@ int main(int argc, char** argv) {
         return -1;
     }
 
-    auto liveview = edge_app::LiveviewSample::CreateLiveview(
-        "Payload", Liveview::kCameraTypePayload, Liveview::kStreamQuality1080p,
-        edge_app::CreateImageProcessor("PayloadCNN"));
-    liveview->Start();
+    StreamDecoder::Options decoder_option = {.name = std::string("ffmpeg")};
+    // create fpv stream decoder
+    auto fpv_decoder = CreateStreamDecoder(decoder_option);
 
-    auto liveview_fpv = edge_app::LiveviewSample::CreateLiveview(
-        "Fpv", Liveview::kCameraTypeFpv, Liveview::kStreamQuality1080p, nullptr);
-    liveview_fpv->Start();
+    // create fpv image processor
+    ImageProcessor::Options fpv_image_processor_option = {
+        .name = std::string("display"), .alias = std::string("FPVCamera")};
+    auto fpv_image_processor = CreateImageProcessor(fpv_image_processor_option);
+
+    // create fpv liveview
+    auto fpv_liveview = edge_app::LiveviewSample::CreateLiveview(
+        "Fpv", Liveview::kCameraTypeFpv, Liveview::kStreamQuality720p,
+        fpv_decoder, fpv_image_processor);
+
+    // start fpv liveview
+    fpv_liveview->Start();
+
+    // create payload decoder
+    auto payload_decoder = CreateStreamDecoder(decoder_option);
+
+    // create payload image processor
+    ImageProcessor::Options image_processor_option = {
+        .name = std::string("yolovfastest"),
+        .alias = std::string("PlayloadCamera: Yolovfastest")};
+    auto payload_image_processor = CreateImageProcessor(image_processor_option);
+
+    // create payload liveview
+    auto payload_liveview = LiveviewSample::CreateLiveview(
+        "Payload", Liveview::kCameraTypePayload, Liveview::kStreamQuality720p,
+        payload_decoder, payload_image_processor);
+
+    // start payload liveview
+    payload_liveview->Start();
 
     while (1) sleep(3);
 

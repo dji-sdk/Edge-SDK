@@ -22,6 +22,7 @@
 #ifndef __IMAGE_PROCESSOR_H__
 #define __IMAGE_PROCESSOR_H__
 
+#include <cstdint>
 #include <memory>
 #include <string>
 
@@ -33,9 +34,16 @@ namespace edge_app {
 
 class ImageProcessor {
    public:
-    using Options = std::string;
+    struct Options {
+        std::string name;
+        std::string alias;
+    };
 
-    virtual ~ImageProcessor() {}
+    virtual int32_t Init() { return 0; }
+
+    virtual ~ImageProcessor();
+
+    ImageProcessor();
 
     using Image = cv::Mat;
     virtual void Process(const std::shared_ptr<Image> image) = 0;
@@ -44,6 +52,6 @@ class ImageProcessor {
 std::shared_ptr<ImageProcessor> CreateImageProcessor(
     const ImageProcessor::Options& option);
 
-}  // namespace image_processor
+}  // namespace edge_app
 
 #endif

@@ -23,9 +23,9 @@
 #ifndef __ESDK_INIT_OPTIONS_H_
 #define __ESDK_INIT_OPTIONS_H_
 
-#include <functional>
-#include <list>
+#include <cstdint>
 #include <string>
+#include <list>
 
 #include "logger.h"
 

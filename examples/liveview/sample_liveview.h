@@ -30,8 +30,6 @@
 #include "stream_decoder.h"
 #include "stream_processor_thread.h"
 
-using ErrorCode = edge_sdk::ErrorCode;
-
 namespace edge_app {
 
 class LiveviewSample {
@@ -39,36 +37,30 @@ class LiveviewSample {
     static std::shared_ptr<LiveviewSample> CreateLiveview(
         const std::string& name, edge_sdk::Liveview::CameraType type,
         edge_sdk::Liveview::StreamQuality quality,
+        std::shared_ptr<StreamDecoder> stream_decoder,
         std::shared_ptr<ImageProcessor> image_processor);
 
     LiveviewSample(const std::string& name);
     ~LiveviewSample() {}
 
-    void SetProcessor(std::shared_ptr<StreamProcessorThread> processor);
-
     edge_sdk::ErrorCode Init(edge_sdk::Liveview::CameraType type,
-                             edge_sdk::Liveview::StreamQuality quality);
+                             edge_sdk::Liveview::StreamQuality quality,
+                             std::shared_ptr<StreamProcessorThread> processor);
 
     edge_sdk::ErrorCode Start();
 
-    edge_sdk::ErrorCode SetCameraSource(edge_sdk::Liveview::CameraSource source);
+    edge_sdk::ErrorCode SetCameraSource(
+        edge_sdk::Liveview::CameraSource source);
 
    private:
-
     edge_sdk::ErrorCode StreamCallback(const uint8_t* data, size_t len);
 
     void LiveviewStatusCallback(
         const edge_sdk::Liveview::LiveviewStatus& status);
 
-    enum {
-        kLiveviewStatusTimeOutThreshold = 8,
-    };
-
-    bool try_restart_liveview_ = false;
-    time_t received_liveview_status_time_ = 0;
-    edge_sdk::Liveview::LiveviewStatus liveview_status_ = 0;
     std::shared_ptr<edge_sdk::Liveview> liveview_;
     std::shared_ptr<StreamProcessorThread> stream_processor_thread_;
+    edge_sdk::Liveview::LiveviewStatus liveview_status_;
 };
 
 }  // namespace edge_app

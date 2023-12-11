@@ -30,7 +30,10 @@
 #include <thread>
 
 #include "error_code.h"
-#include "opencv2/opencv.hpp"
+
+namespace cv {
+class Mat;
+}
 
 namespace edge_app {
 
