@@ -80,6 +80,9 @@ class Liveview {
 
         /*! Stream Quality 1080p: 30fps, 1920*1080, bps 3*1024*1024 */
         kStreamQuality1080p = 4,
+
+        /*! Stream Quality 1080p: 30fps, 1920*1080, bps 8*1024*1024 */
+        kStreamQuality1080pHigh = 5,
     };
 
     /**
@@ -110,7 +113,7 @@ class Liveview {
      * qualities: bit0 represents the validity of the adaptive stream; bit1
      * represents the 540p stream's validity; bit2 represents the 720p stream's
      * validity; bit3 represents the 720pHigh stream's validity; bit4 represents
-     * the 1080p stream's validity. */
+     * the 1080p stream's validity. bit5 represents the 1080pHigh stream's validity */
     using LiveviewStatus = uint32_t;
     /**
      * @brief Prototype for stream status processing

@@ -60,7 +60,6 @@ void ImageProcessorThread::InputImage(const std::shared_ptr<Image> image) {
     image_queue_.push(image);
     if (image_queue_.size() > kImageQueueSizeLimit) {
         image_queue_.pop();
-        DEBUG("image queue full...");
     }
     image_queue_cv_.notify_one();
 }

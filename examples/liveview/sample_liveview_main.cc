@@ -38,23 +38,10 @@ int main(int argc, char** argv) {
         return -1;
     }
 
+    // create payload liveview
+    auto payload_liveview = std::make_shared<LiveviewSample>("Payload");
+
     StreamDecoder::Options decoder_option = {.name = std::string("ffmpeg")};
-    // create fpv stream decoder
-    auto fpv_decoder = CreateStreamDecoder(decoder_option);
-
-    // create fpv image processor
-    ImageProcessor::Options fpv_image_processor_option = {
-        .name = std::string("display"), .alias = std::string("FPVCamera")};
-    auto fpv_image_processor = CreateImageProcessor(fpv_image_processor_option);
-
-    // create fpv liveview
-    auto fpv_liveview = edge_app::LiveviewSample::CreateLiveview(
-        "Fpv", Liveview::kCameraTypeFpv, Liveview::kStreamQuality720p,
-        fpv_decoder, fpv_image_processor);
-
-    // start fpv liveview
-    fpv_liveview->Start();
-
     // create payload decoder
     auto payload_decoder = CreateStreamDecoder(decoder_option);
 
@@ -64,13 +51,34 @@ int main(int argc, char** argv) {
         .alias = std::string("PlayloadCamera: Yolovfastest")};
     auto payload_image_processor = CreateImageProcessor(image_processor_option);
 
-    // create payload liveview
-    auto payload_liveview = LiveviewSample::CreateLiveview(
-        "Payload", Liveview::kCameraTypePayload, Liveview::kStreamQuality720p,
-        payload_decoder, payload_image_processor);
+    if (0 != InitLiveviewSample(
+        payload_liveview, Liveview::kCameraTypePayload, Liveview::kStreamQuality1080pHigh,
+        payload_decoder, payload_image_processor)) {
+        ERROR("Init fpv liveview sample failed");
+    } else {
+        // start payload liveview
+        payload_liveview->Start();
+    }
 
-    // start payload liveview
-    payload_liveview->Start();
+    // create fpv liveview
+    auto fpv_liveview = std::make_shared<LiveviewSample>("Fpv");
+
+    // create fpv stream decoder
+    auto fpv_decoder = CreateStreamDecoder(decoder_option);
+
+    // create fpv image processor
+    ImageProcessor::Options fpv_image_processor_option = {
+        .name = std::string("display"), .alias = std::string("FPVCamera"), .userdata = fpv_liveview};
+    auto fpv_image_processor = CreateImageProcessor(fpv_image_processor_option);
+
+    if (0 != InitLiveviewSample(
+        fpv_liveview, Liveview::kCameraTypeFpv, Liveview::kStreamQuality720p,
+        fpv_decoder, fpv_image_processor)) {
+        ERROR("Init fpv liveview sample failed");
+    } else {
+        // start fpv liveview
+        fpv_liveview->Start();
+    }
 
     while (1) sleep(3);
 

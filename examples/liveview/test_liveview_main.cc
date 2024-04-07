@@ -42,7 +42,7 @@ int main(int argc, char **argv) {
             "Usage: %s [CAMERA_TYPE] [QUALITY] [SOURCE] \nDESCRIPTION:\n "
             "CAMERA_TYPE: "
             "0-FPV. 1-Payload \n QUALITY: 1-540p. 2-720p. 3-720pHigh. "
-            "4-1080p "
+            "4-1080p. 5-1080pHigh"
             "\n SOURCE: 1-wide 2-zoom 3-IR \n eg: \n %s 1 3 1",
             argv[0], argv[0]);
         sleep(1);
@@ -52,25 +52,31 @@ int main(int argc, char **argv) {
 
     const char type_to_str[2][16] = {"FPVCamera", "PayloadCamera"};
 
+    // create liveview sample
+    auto camera = std::string(type_to_str[type]);
+
+    auto liveview_sample = std::make_shared<LiveviewSample>(std::string(camera));
+
     StreamDecoder::Options decoder_option = {.name = std::string("ffmpeg")};
     auto stream_decoder = CreateStreamDecoder(decoder_option);
 
-    auto tag = std::string(type_to_str[type]);
     ImageProcessor::Options image_processor_option = {.name = std::string("display"),
-                                       .alias = tag};
+                                       .alias = camera, .userdata = liveview_sample};
     auto image_processor = CreateImageProcessor(image_processor_option);
 
-    auto liveview = LiveviewSample::CreateLiveview(
-        tag, (Liveview::CameraType)type, (Liveview::StreamQuality)quality,
-        stream_decoder, image_processor);
+    if (0 != InitLiveviewSample(
+        liveview_sample, (Liveview::CameraType)type, (Liveview::StreamQuality)quality,
+        stream_decoder, image_processor)) {
+        ERROR("Init %s liveview sample failed", camera.c_str());
+    } else {
+        liveview_sample->Start();
+    }
 
     if (argc == 4) {
         auto src = atoi(argv[3]);
         INFO("set camera soure: %d", src);
-        liveview->SetCameraSource((edge_sdk::Liveview::CameraSource)src);
+        liveview_sample->SetCameraSource((edge_sdk::Liveview::CameraSource)src);
     }
-
-    liveview->Start();
 
     while (1) sleep(3);
 

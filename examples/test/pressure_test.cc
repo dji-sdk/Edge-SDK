@@ -182,7 +182,8 @@ static void StartDumpMediaFiles() {
 
 class JpegRecordProcessor : public ImageProcessor {
    public:
-    JpegRecordProcessor(const std::string& name) : name_(name) {
+    JpegRecordProcessor(const std::string& name, std::shared_ptr<LiveviewSample> live_sample) : name_(name),
+        liveview_sample_(live_sample) {
         snprintf(file_path_, sizeof(file_path_), "%s../../build/%s",
                  current_path_, "video2jpeg");
         char cmd[532];
@@ -198,6 +199,16 @@ class JpegRecordProcessor : public ImageProcessor {
     ~JpegRecordProcessor() override {}
 
     void Process(const std::shared_ptr<Image> image) override {
+        std::string h = std::to_string(image->size().width);
+        std::string w = std::to_string(image->size().height);
+        std::string osd = h + "x" + w;
+        if (liveview_sample_) {
+            auto kbps = liveview_sample_->GetStreamBitrate();
+            osd += std::string(",") + std::to_string(kbps) + std::string("kbps");
+        }
+        putText(*image, osd, cv::Point(10, 30), cv::FONT_HERSHEY_SIMPLEX, 1,
+                cv::Scalar(0, 0, 255), 3);
+
         frame_counter_++;
         if (frame_counter_ > 150) {
             frame_counter_ = 0;
@@ -212,9 +223,83 @@ class JpegRecordProcessor : public ImageProcessor {
     }
 
    private:
+    std::shared_ptr<LiveviewSample> liveview_sample_;
     uint32_t frame_counter_ = 0;
     std::string name_;
     char file_path_[256];
+};
+
+class StreamDecodeRecorder : public StreamDecoder {
+    public:
+     StreamDecodeRecorder(const std::string& name, std::shared_ptr<StreamDecoder>& decoder) : StreamDecoder(name),
+        name_(name), decoder_(decoder) {
+        snprintf(file_path_, sizeof(file_path_), "%s../../build/%s",
+                 current_path_, "h264Save");
+        char cmd[532];
+        snprintf(cmd, sizeof(cmd), "[ -d %s] || mkdir %s -p", file_path_,
+                 file_path_);
+        auto ret = system(cmd);
+        if (ret != 0) {
+            WARN("mkdir %s failed", file_path_);
+        }
+        INFO("jpeg recorder init successfully");
+     }
+
+     ~StreamDecodeRecorder() override {
+         if (file_) {
+             fclose(file_);
+         }
+     }
+
+     int32_t Init() override {
+         return decoder_->Init();
+     }
+
+     int32_t DeInit() override {
+         return decoder_->DeInit();
+     }
+
+     int32_t Decode(const uint8_t* data, size_t length,
+                    DecodeResultCallback result_callback) {
+         auto get_current_boot_time = [] {
+             struct timespec ts;
+             clock_gettime(CLOCK_BOOTTIME, &ts);
+             return ts.tv_sec;
+         };
+
+         auto now = get_current_boot_time();
+         if (now - create_new_file_time_ >= 60) {
+             create_new_file_time_ = now;
+             if (file_) {
+                 fclose(file_);
+                 file_ = NULL;
+             }
+             char buf[32];
+             auto now = time(NULL);
+             strftime(buf, sizeof(buf), "_%Y-%m-%d-%H-%M-%S", localtime(&now));
+             std::string file = file_path_ + std::string("/") + name_ +
+                 std::string(buf) + ".h264";
+             file_ = fopen(file.c_str(), "w+b");
+             INFO("create h264 file: %s", file.c_str());
+             if (!file_) {
+                 ERROR("create file failed: %s", file.c_str());
+             }
+         }
+         if (now - create_new_file_time_ < 5) {
+             if (file_) {
+                 fwrite(data, length, 1, file_);
+             }
+         }
+
+         return decoder_->Decode(data, length, result_callback);
+     }
+
+private:
+    FILE* file_ = NULL;
+    uint32_t create_new_file_time_ = 0;
+    std::string name_;
+    char file_path_[256];
+    std::shared_ptr<StreamDecoder> decoder_;
 };
 
 int main(int argc, char** argv) {
@@ -232,29 +317,39 @@ int main(int argc, char** argv) {
 
     StartDumpMediaFiles();
 
-    auto image_processor = std::make_shared<JpegRecordProcessor>("Payload");
+    auto payload_liveview = std::make_shared<LiveviewSample>("Payload");
+    auto image_processor = std::make_shared<JpegRecordProcessor>("Payload", payload_liveview);
     StreamDecoder::Options decoder_option = {.name = std::string("ffmpeg")};
     auto payload_decoder = CreateStreamDecoder(decoder_option);
+    std::shared_ptr<StreamDecoder> payload_stream_decoder = std::make_shared<StreamDecodeRecorder>("Payload",
+                                                                                                 payload_decoder);
 
-    auto liveview = edge_app::LiveviewSample::CreateLiveview(
-        "Payload", Liveview::kCameraTypePayload, Liveview::kStreamQuality720p,
-        payload_decoder, image_processor);
-
-    rc = liveview->Start();
-    if (rc != kOk) {
-        ERROR("liveview start: %d", rc);
+    if (0 != InitLiveviewSample(
+        payload_liveview, Liveview::kCameraTypePayload, Liveview::kStreamQuality1080pHigh,
+        payload_stream_decoder, image_processor)) {
+        ERROR("liveview payload init failed");
+    } else {
+        rc = payload_liveview->Start();
+        if (rc != kOk) {
+            ERROR("liveview start: %d", rc);
+        }
     }
 
     INFO("start FPV cammera");
-    auto fpv_image_processor = std::make_shared<JpegRecordProcessor>("FPV");
+    auto fpv_liveview = std::make_shared<LiveviewSample>("FPV");
+    auto fpv_image_processor = std::make_shared<JpegRecordProcessor>("FPV", fpv_liveview);
     auto fpv_decoder = CreateStreamDecoder(decoder_option);
-    auto fpv_liveview = edge_app::LiveviewSample::CreateLiveview(
-        "FPV", Liveview::kCameraTypeFpv, Liveview::kStreamQuality720p,
-        fpv_decoder, fpv_image_processor);
-
-    rc = fpv_liveview->Start();
-    if (rc != kOk) {
-        ERROR("%d", rc);
+    std::shared_ptr<StreamDecoder> fpv_stream_decoder  = std::make_shared<StreamDecodeRecorder>("FPV",
+                                                                                                 fpv_decoder);
+    if (0 != InitLiveviewSample(
+        fpv_liveview, Liveview::kCameraTypeFpv, Liveview::kStreamQuality1080pHigh,
+        fpv_stream_decoder, fpv_image_processor)) {
+        ERROR("liveview fpv init failed");
+    } else {
+        rc = fpv_liveview->Start();
+        if (rc != kOk) {
+            ERROR("liveview fpv start: %d", rc);
+        }
     }
 
     if (argc == 3) {

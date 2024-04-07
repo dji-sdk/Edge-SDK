@@ -22,16 +22,21 @@
 #ifndef __IMAGE_PROCESSOR_DIAPLAY_H__
 #define __IMAGE_PROCESSOR_DIAPLAY_H__
 
+#include <memory>
 #include "opencv2/opencv.hpp"
+#include "liveview/sample_liveview.h"
 
 namespace edge_app {
 
 class ImageDisplayProcessor : public ImageProcessor {
    public:
-    ImageDisplayProcessor(const std::string& name) : name_(name) {
+    ImageDisplayProcessor(const std::string& name, std::shared_ptr<void> userdata) : name_(name) {
         cv::namedWindow(name.c_str(), cv::WINDOW_NORMAL);
         cv::resizeWindow(name.c_str(), 960, 540);
         cv::moveWindow(name.c_str(), rand() & 0xFF, rand() & 0xFF);
+        if (userdata) {
+            liveview_sample_ = std::static_pointer_cast<LiveviewSample>(userdata);
+        }
     }
 
     ~ImageDisplayProcessor() override {}
@@ -40,14 +45,19 @@ class ImageDisplayProcessor : public ImageProcessor {
         std::string h = std::to_string(image->size().width);
         std::string w = std::to_string(image->size().height);
         std::string osd = h + "x" + w;
+        if (liveview_sample_) {
+            auto kbps = liveview_sample_->GetStreamBitrate();
+            osd += std::string(",") + std::to_string(kbps) + std::string("kbps");
+        }
         putText(*image, osd, cv::Point(10, 30), cv::FONT_HERSHEY_SIMPLEX, 1,
-                cv::Scalar(0, 255, 0));
+                cv::Scalar(0, 0, 255), 3);
         imshow(name_.c_str(), *image);
         cv::waitKey(1);
     }
 
    private:
     std::string name_;
+    std::shared_ptr<LiveviewSample> liveview_sample_;
 };
 
 }  // namespace edge_app

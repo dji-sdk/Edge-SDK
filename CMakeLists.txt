@@ -20,6 +20,7 @@ file(GLOB_RECURSE MODULE_SAMPLE_SRC
         examples/init/key_store_default.cc)
 
 include_directories(include)
+include_directories(examples)
 include_directories(examples/common)
 
 link_directories(${CMAKE_CURRENT_LIST_DIR}/lib/${CMAKE_HOST_SYSTEM_PROCESSOR})
@@ -90,7 +91,9 @@ if (OpenCV_FOUND AND FFMPEG_FOUND)
     target_link_libraries(sample_liveview ${SAMPLE_LIB})
 
     add_executable(test_liveview examples/liveview/test_liveview_main.cc)
+    add_executable(test_liveview_dual examples/liveview/test_liveview_dual_main.cc)
     target_link_libraries(test_liveview ${SAMPLE_LIB})
+    target_link_libraries(test_liveview_dual ${SAMPLE_LIB})
 
     add_executable(pressure_test examples/test/pressure_test.cc)
     target_link_libraries(pressure_test ${SAMPLE_LIB})

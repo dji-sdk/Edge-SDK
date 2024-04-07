@@ -25,6 +25,9 @@
 
 #include "liveview/liveview.h"
 
+#define BITRATE_CALCULATE_BITS_PER_BYTE 8
+#define BITRATE_CALCULATE_INTERVAL_TIME_MS 2000
+
 using namespace edge_sdk;
 
 namespace edge_app {
@@ -35,8 +38,19 @@ LiveviewSample::LiveviewSample(const std::string& name) {
 }
 
 ErrorCode LiveviewSample::StreamCallback(const uint8_t* data, size_t len) {
+    auto now =  std::chrono::system_clock::now();
     if (stream_processor_thread_) {
         stream_processor_thread_->InputStream(data, len);
+    }
+
+    // for bitrate calculate
+    receive_stream_data_total_size_ += len;
+    auto duration  = std::chrono::duration_cast<std::chrono::milliseconds>(now - receive_stream_data_time_).count();
+    if (duration >= BITRATE_CALCULATE_INTERVAL_TIME_MS) {
+        auto kbps = receive_stream_data_total_size_ * BITRATE_CALCULATE_BITS_PER_BYTE / (BITRATE_CALCULATE_INTERVAL_TIME_MS / 1000) / 1024;
+        stream_bitrate_kbps_ = kbps;
+        receive_stream_data_total_size_  = 0;
+        receive_stream_data_time_  = now;
     }
     return kOk;
 }
@@ -82,26 +96,26 @@ void LiveviewSample::LiveviewStatusCallback(
     DEBUG("status: %d", status);
 }
 
-std::shared_ptr<LiveviewSample> LiveviewSample::CreateLiveview(
-    const std::string& name, edge_sdk::Liveview::CameraType type,
+int32_t InitLiveviewSample(std::shared_ptr<LiveviewSample>& liveview_sample, edge_sdk::Liveview::CameraType type,
     edge_sdk::Liveview::StreamQuality quality,
     std::shared_ptr<StreamDecoder> stream_decoder,
-    std::shared_ptr<ImageProcessor> image_processor) {
-    auto image_processor_thread = std::make_shared<ImageProcessorThread>(name);
+    std::shared_ptr<ImageProcessor> image_processor)
+{
+    auto image_processor_thread = std::make_shared<ImageProcessorThread>(stream_decoder->Name());
     image_processor_thread->SetImageProcessor(image_processor);
 
     auto stream_processor_thread =
-        std::make_shared<StreamProcessorThread>(name);
+        std::make_shared<StreamProcessorThread>(stream_decoder->Name());
     stream_processor_thread->SetStreamDecoder(stream_decoder);
     stream_processor_thread->SetImageProcessorThread(image_processor_thread);
 
-    auto liveview = std::make_shared<LiveviewSample>(name);
-    auto rc = liveview->Init(type, quality, stream_processor_thread);
+    auto rc = liveview_sample->Init(type, quality, stream_processor_thread);
     if (rc != kOk) {
         ERROR("liveview sample init failed");
+        return -1;
     }
 
-    return liveview;
+    return 0;
 }
 
 ErrorCode LiveviewSample::SetCameraSource(
