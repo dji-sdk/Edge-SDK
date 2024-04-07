@@ -1,6 +1,6 @@
 # DJI Edge SDK (ESDK)
 
-![](https://img.shields.io/badge/version-V1.1.0-yellow.svg)
+![](https://img.shields.io/badge/version-V1.1.1-yellow.svg)
 ![](https://img.shields.io/badge/platform-linux-green.svg)
 ![](https://img.shields.io/badge/license-MIT-blue.svg)
 
@@ -28,7 +28,7 @@ Edge computing offers a secure local communication link, ensuring communication 
 Edge computing can process and transmit data in unstable network environments, utilizing small data channels to enhance transmission efficiency. This ensures aircraft achieve efficient data processing and transmission across various environments.
 
 ## Dependencies
-* libssh2 (version 1.10.x or higher)
+* libssh2 (reference version 1.10.0)
 * openssl (reference version 1.1.1f)
 * opencv (version 3.4.16 or higher)
 * ffmpeg (version 4.13 or higher)

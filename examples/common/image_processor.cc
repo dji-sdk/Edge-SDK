@@ -46,7 +46,7 @@ ImageProcessor::~ImageProcessor() {}
 std::shared_ptr<ImageProcessor> CreateImageProcessor(
     const ImageProcessor::Options& option) {
     if (option.name == std::string("display")) {
-        return std::make_shared<ImageDisplayProcessor>(option.alias);
+        return std::make_shared<ImageDisplayProcessor>(option.alias, option.userdata);
     }
     if (option.name == std::string("yolovfastest")) {
         return std::make_shared<ImageProcessorYolovFastest>(option.alias);
