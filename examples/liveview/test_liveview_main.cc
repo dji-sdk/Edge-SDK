@@ -72,13 +72,15 @@ int main(int argc, char **argv) {
         liveview_sample->Start();
     }
 
-    if (argc == 4) {
-        auto src = atoi(argv[3]);
-        INFO("set camera soure: %d", src);
-        liveview_sample->SetCameraSource((edge_sdk::Liveview::CameraSource)src);
+    while (1) 
+    {
+        if (argc == 4) {
+            auto src = atoi(argv[3]);
+            INFO("set camera soure: %d", src);
+            liveview_sample->SetCameraSource((edge_sdk::Liveview::CameraSource)src);
+        }
+        sleep(3);
     }
-
-    while (1) sleep(3);
 
     return 0;
 }
